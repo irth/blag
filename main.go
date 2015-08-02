@@ -1,9 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"github.com/flosch/pongo2"
+	"github.com/russross/blackfriday"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
 	"path"
+	"strings"
 )
 
 type Config struct {
@@ -12,12 +18,16 @@ type Config struct {
 	Output *string
 }
 
-type BlagPost struct {
+type BlagPostMeta struct {
 	Title     string
 	Timestamp int
 	Author    string
-	Content   string
 	Slug      string
+}
+
+type BlagPost struct {
+	BlagPostMeta
+	Content string
 }
 
 type Theme struct {
@@ -32,6 +42,42 @@ func LoadTheme(theme_dir string) Theme {
 	return t
 }
 
+func LoadPost(path string) BlagPost {
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	buf := bufio.NewReader(file)
+	yaml_meta := ""
+	for !strings.HasSuffix(yaml_meta, "\n\n") {
+		var s string
+		s, err = buf.ReadString('\n')
+		yaml_meta += s
+	}
+
+	var meta BlagPostMeta
+	yaml.Unmarshal([]byte(yaml_meta), &meta)
+
+	markdown, _ := ioutil.ReadAll(buf)
+	html := string(blackfriday.MarkdownCommon(markdown))
+	return BlagPost{
+		meta,
+		html,
+	}
+}
+
+func LoadPosts(input_dir string) []BlagPost {
+	var p []BlagPost
+	filelist, err := ioutil.ReadDir(input_dir)
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range filelist {
+		p = append(p, LoadPost(path.Join(input_dir, file.Name())))
+	}
+	return p
+}
+
 func main() {
 	var config Config
 	config.Input = flag.String("input", "./input/", "Directory where blog posts are stored (in markdown format)")
@@ -41,4 +87,7 @@ func main() {
 
 	var theme Theme
 	theme = LoadTheme(*config.Theme)
+
+	var posts []BlagPost
+	posts = LoadPosts(*config.Input)
 }
