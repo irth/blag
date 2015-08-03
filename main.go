@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/flosch/pongo2"
@@ -54,8 +55,8 @@ func LoadTheme(themeDir string) Theme {
 
 // LoadPost loads post file specified by path argument, and returns BlagPost
 // object with data loaded from that file.
-func LoadPost(path string) BlagPost {
-	file, err := os.Open(path)
+func LoadPost(fpath string) BlagPost {
+	file, err := os.Open(fpath)
 	if err != nil {
 		panic(err)
 	}
@@ -69,6 +70,11 @@ func LoadPost(path string) BlagPost {
 
 	var meta BlagPostMeta
 	yaml.Unmarshal([]byte(yamlMeta), &meta)
+
+	if len(meta.Slug) == 0 {
+		basename := filepath.Base(file.Name())
+		meta.Slug = strings.TrimSuffix(basename, filepath.Ext(basename))
+	}
 
 	markdown, _ := ioutil.ReadAll(buf)
 	html := string(blackfriday.MarkdownCommon(markdown))
