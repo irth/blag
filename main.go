@@ -113,9 +113,9 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 
 func main() {
 	var config Config
-	config.Input = flag.String("input", "./input/", "Directory where blog posts are stored (in markdown format)")
-	config.Output = flag.String("output", "./output/", "Directory where generated html should be stored")
-	config.Theme = flag.String("theme", "./theme/", "Directory containing theme files (templates)")
+	config.Input = flag.String("input", "input", "Directory where blog posts are stored (in markdown format)")
+	config.Output = flag.String("output", "output", "Directory where generated html should be stored")
+	config.Theme = flag.String("theme", "theme", "Directory containing theme files (templates)")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
