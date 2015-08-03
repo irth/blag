@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,6 +23,7 @@ type Config struct {
 	Output           *string
 	PostsPerPage     *int
 	StoryShortLength *int
+	Title            *string
 }
 
 // BlagPostMeta is a struct that will hold a blogpost metadata
@@ -102,26 +105,70 @@ func LoadPosts(inputDir string) []BlagPost {
 // GenerateHTML generates page's static html and stores it in directory
 // specified in config.
 func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
+	os.RemoveAll(*config.Output)
+	os.MkdirAll(*config.Output, 0755)
+	os.MkdirAll(path.Join(*config.Output, "post"), 0755)
 	for _, post := range posts {
-		postFile, err := os.OpenFile(path.Join(*config.Output, post.Slug+".html"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		postFile, err := os.OpenFile(
+			path.Join(*config.Output, "post", fmt.Sprintf("%s.html", post.Slug)),
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		defer postFile.Close()
 		if err != nil {
 			panic(err)
 		}
 		theme.Post.ExecuteWriter(pongo2.Context{
-			"title":     post.Title,
-			"author":    post.Author,
-			"timestamp": post.Timestamp,
-			"content":   post.Content,
+			"title": config.Title,
+			"post":  post,
 		}, postFile)
+	}
+
+	postCount := len(posts)
+	pageCount := int(math.Floor(float64(postCount) / float64(*config.PostsPerPage)))
+	pagePosts := make(map[int][]BlagPost)
+	for i := postCount - 1; i >= 0; i-- {
+		pageNo := int(math.Floor(float64(postCount-i-1)/float64(*config.PostsPerPage))) + 1
+		pagePosts[pageNo] = append(pagePosts[pageNo], posts[i])
+	}
+
+	os.MkdirAll(path.Join(*config.Output, "page"), 0755)
+	for k, v := range pagePosts {
+		pageFile, err := os.OpenFile(
+			path.Join(*config.Output, "page", fmt.Sprintf("%d.html", k)),
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		defer pageFile.Close()
+		if err != nil {
+			panic(err)
+		}
+		theme.Page.ExecuteWriter(pongo2.Context{
+			"title":        config.Title,
+			"posts":        v,
+			"current_page": k,
+			"page_count":   pageCount,
+		}, pageFile)
+		if k == 1 {
+			indexFile, err := os.OpenFile(
+				path.Join(*config.Output, "index.html"),
+				os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			defer pageFile.Close()
+			if err != nil {
+				panic(err)
+			}
+			theme.Page.ExecuteWriter(pongo2.Context{
+				"title":        config.Title,
+				"posts":        v,
+				"current_page": k,
+				"page_count":   pageCount,
+			}, indexFile)
+		}
 	}
 }
 
 func main() {
 	var config Config
 	config.Input = flag.String("input", "input", "Directory where blog posts are stored (in markdown format)")
-	config.Output = flag.String("output", "output", "Directory where generated html should be stored")
+	config.Output = flag.String("output", "output", "Directory where generated html should be stored (IT WILL REMOVE ALL FILES INSIDE THAT DIR)")
 	config.Theme = flag.String("theme", "theme", "Directory containing theme files (templates)")
+	config.Title = flag.String("title", "Blag.", "Blag title")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
