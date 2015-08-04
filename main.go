@@ -13,6 +13,7 @@ import (
 
 	"github.com/flosch/pongo2"
 	"github.com/russross/blackfriday"
+	"github.com/termie/go-shutil"
 	"gopkg.in/yaml.v2"
 )
 
@@ -51,8 +52,8 @@ type Theme struct {
 // themeDir/post.html, and it will panic if that will not succeed.
 func LoadTheme(themeDir string) Theme {
 	t := Theme{}
-	t.Page = pongo2.Must(pongo2.FromFile(path.Join(themeDir, "page.html")))
-	t.Post = pongo2.Must(pongo2.FromFile(path.Join(themeDir, "post.html")))
+	t.Page = pongo2.Must(pongo2.FromFile(path.Join(themeDir, "templates", "page.html")))
+	t.Post = pongo2.Must(pongo2.FromFile(path.Join(themeDir, "templates", "post.html")))
 	return t
 }
 
@@ -106,6 +107,12 @@ func LoadPosts(inputDir string) []BlagPost {
 // specified in config.
 func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 	os.RemoveAll(*config.Output)
+	shutil.CopyTree(path.Join(*config.Theme, "static"), *config.Output, &shutil.CopyTreeOptions{
+		Symlinks:               true,
+		IgnoreDanglingSymlinks: true,
+		CopyFunction:           shutil.Copy,
+		Ignore:                 nil,
+	})
 	os.MkdirAll(*config.Output, 0755)
 	os.MkdirAll(path.Join(*config.Output, "post"), 0755)
 	for _, post := range posts {
