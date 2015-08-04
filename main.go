@@ -123,13 +123,17 @@ func LoadPosts(config Config) []BlagPost {
 // GenerateHTML generates page's static html and stores it in directory
 // specified in config.
 func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
-	os.RemoveAll(*config.Output)
+	err := os.RemoveAll(*config.Output)
+	if err != nil {
+		panic(err)
+	}
 	shutil.CopyTree(path.Join(*config.Theme, "static"), *config.Output, &shutil.CopyTreeOptions{
 		Symlinks:               true,
 		IgnoreDanglingSymlinks: true,
 		CopyFunction:           shutil.Copy,
 		Ignore:                 nil,
 	})
+
 	os.MkdirAll(*config.Output, 0755)
 
 	os.MkdirAll(path.Join(*config.Output, "post"), 0755)
@@ -142,6 +146,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 			panic(err)
 		}
 		theme.Post.ExecuteWriter(pongo2.Context{
+			"base":  config.BaseURL,
 			"title": config.Title,
 			"post":  post,
 		}, postFile)
