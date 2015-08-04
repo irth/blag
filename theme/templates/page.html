@@ -1,0 +1,25 @@
+{% extends "skel.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block body %}
+{% for post in posts %}
+<div class="post">
+  <div class="post-title"><a href="post/{{ post.Slug }}.html">{{ post.Title }}</a></div>
+  <div class="post-meta">Added on <span>{{ post.Time }}</span> by <span>{{ post.Author }}</span>.</div>
+  <div class="post-short">{{ post.Content | striptags | truncatechars:shortlen | trim }}</div>
+  <div>
+    <a class="post-more" href="post/{{ post.Slug }}.html">[more]</a>
+  </div>
+</div>
+{% empty %}
+No posts.
+{% endfor %}
+<div id="pagination">
+  {% if current_page > 1 %}
+  <a href="page/{{ current_page - 1 }}.html">[previous page]</a>
+  {% endif %}
+  Page {{ current_page }} of {{ page_count }}
+  {% if current_page < page_count %}
+  <a href="page/{{ current_page + 1}}.html">[next page]</a>
+  {% endif %}
+</div>
+{% endblock %}

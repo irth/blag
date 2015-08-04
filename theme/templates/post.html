@@ -1,0 +1,10 @@
+{% extends "skel.html" %}
+{% block title %}{{ title }} - {{ post.Title }}{% endblock %}
+{% block body %}
+<div class="post">
+  <div class="post-title"><a href="post/{{ post.Slug }}.html">{{ post.Title }}</a></div>
+  <div class="post-meta">Added on <span>{{ post.Time }}</span> by <span>{{ post.Author }}</span>.</div>
+  <div class="post-content">{{ post.Content | safe }}</div>
+</div>
+
+{% endblock %}
