@@ -27,6 +27,7 @@ type Config struct {
 	StoryShortLength *int
 	Title            *string
 	DateFormat       *string
+	BaseURL          *string
 }
 
 // BlagPostMeta is a struct that will hold a blogpost metadata
@@ -165,6 +166,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 				panic(err)
 			}
 			theme.Page.ExecuteWriter(pongo2.Context{
+				"base":         *config.BaseURL,
 				"title":        *config.Title,
 				"posts":        v,
 				"current_page": k,
@@ -180,10 +182,12 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 					panic(err)
 				}
 				theme.Page.ExecuteWriter(pongo2.Context{
-					"title":        config.Title,
+					"base":         *config.BaseURL,
+					"title":        *config.Title,
 					"posts":        v,
 					"current_page": k,
 					"page_count":   pageCount,
+					"shortlen":     *config.StoryShortLength,
 				}, indexFile)
 			}
 		}
@@ -196,10 +200,12 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 			panic(err)
 		}
 		theme.Page.ExecuteWriter(pongo2.Context{
+			"base":         *config.BaseURL,
 			"title":        config.Title,
 			"posts":        make([]BlagPost, 0),
 			"current_page": 1,
 			"page_count":   1,
+			"shortlen":     *config.StoryShortLength,
 		}, pageFile)
 		indexFile, err := os.OpenFile(
 			path.Join(*config.Output, "index.html"),
@@ -209,10 +215,12 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 			panic(err)
 		}
 		theme.Page.ExecuteWriter(pongo2.Context{
+			"base":         *config.BaseURL,
 			"title":        config.Title,
 			"posts":        make([]BlagPost, 0),
 			"current_page": 1,
 			"page_count":   1,
+			"shortlen":     *config.StoryShortLength,
 		}, indexFile)
 	}
 }
@@ -224,6 +232,7 @@ func main() {
 	config.Theme = flag.String("theme", "theme", "Directory containing theme files (templates)")
 	config.Title = flag.String("title", "Blag.", "Blag title")
 	config.DateFormat = flag.String("dateformat", "2006-01-02 15:04:05", "Time layout, as used in Golang's time.Time.Format()")
+	config.BaseURL = flag.String("baseurl", "/", "URL that will be used in <base href=\"\"> element.")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
