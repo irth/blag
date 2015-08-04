@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/flosch/pongo2"
 	"github.com/russross/blackfriday"
@@ -25,12 +26,14 @@ type Config struct {
 	PostsPerPage     *int
 	StoryShortLength *int
 	Title            *string
+	DateFormat       *string
 }
 
 // BlagPostMeta is a struct that will hold a blogpost metadata
 type BlagPostMeta struct {
 	Title     string
-	Timestamp int
+	Timestamp int64
+	Time      string
 	Author    string
 	Slug      string
 }
@@ -59,7 +62,7 @@ func LoadTheme(themeDir string) Theme {
 
 // LoadPost loads post file specified by path argument, and returns BlagPost
 // object with data loaded from that file.
-func LoadPost(fpath string) BlagPost {
+func LoadPost(config Config, fpath string) BlagPost {
 	file, err := os.Open(fpath)
 	if err != nil {
 		panic(err)
@@ -74,6 +77,17 @@ func LoadPost(fpath string) BlagPost {
 
 	var meta BlagPostMeta
 	yaml.Unmarshal([]byte(yamlMeta), &meta)
+
+	if meta.Timestamp <= 0 {
+		stat, err := file.Stat()
+		if err != nil {
+			panic(err)
+		}
+		meta.Timestamp = stat.ModTime().Unix()
+	}
+
+	time := time.Unix(meta.Timestamp, 0)
+	meta.Time = time.Format(*config.DateFormat)
 
 	if len(meta.Slug) == 0 {
 		basename := filepath.Base(file.Name())
@@ -91,14 +105,15 @@ func LoadPost(fpath string) BlagPost {
 // LoadPosts loads all markdown files in inputDir (not recursive), and returns
 // a slice []BlagPost, containing extracted metadata and HTML rendered from
 // Markdown.
-func LoadPosts(inputDir string) []BlagPost {
+func LoadPosts(config Config) []BlagPost {
+	inputDir := *config.Input
 	var p []BlagPost
 	filelist, err := ioutil.ReadDir(inputDir)
 	if err != nil {
 		panic(err)
 	}
 	for _, file := range filelist {
-		p = append(p, LoadPost(path.Join(inputDir, file.Name())))
+		p = append(p, LoadPost(config, path.Join(inputDir, file.Name())))
 	}
 	return p
 }
@@ -114,6 +129,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 		Ignore:                 nil,
 	})
 	os.MkdirAll(*config.Output, 0755)
+
 	os.MkdirAll(path.Join(*config.Output, "post"), 0755)
 	for _, post := range posts {
 		postFile, err := os.OpenFile(
@@ -130,7 +146,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 	}
 
 	postCount := len(posts)
-	pageCount := int(math.Floor(float64(postCount) / float64(*config.PostsPerPage)))
+	pageCount := int(math.Floor(float64(postCount)/float64(*config.PostsPerPage))) + 1
 
 	os.MkdirAll(path.Join(*config.Output, "page"), 0755)
 	if pageCount > 0 {
@@ -149,10 +165,11 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 				panic(err)
 			}
 			theme.Page.ExecuteWriter(pongo2.Context{
-				"title":        config.Title,
+				"title":        *config.Title,
 				"posts":        v,
 				"current_page": k,
 				"page_count":   pageCount,
+				"shortlen":     *config.StoryShortLength,
 			}, pageFile)
 			if k == 1 {
 				indexFile, err := os.OpenFile(
@@ -206,6 +223,7 @@ func main() {
 	config.Output = flag.String("output", "output", "Directory where generated html should be stored (IT WILL REMOVE ALL FILES INSIDE THAT DIR)")
 	config.Theme = flag.String("theme", "theme", "Directory containing theme files (templates)")
 	config.Title = flag.String("title", "Blag.", "Blag title")
+	config.DateFormat = flag.String("dateformat", "2006-01-02 15:04:05", "Time layout, as used in Golang's time.Time.Format()")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
@@ -214,7 +232,7 @@ func main() {
 	theme = LoadTheme(*config.Theme)
 
 	var posts []BlagPost
-	posts = LoadPosts(*config.Input)
+	posts = LoadPosts(config)
 
 	GenerateHTML(config, theme, posts)
 }
