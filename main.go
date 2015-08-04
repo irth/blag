@@ -96,7 +96,10 @@ func LoadPost(config Config, fpath string) BlagPost {
 	}
 
 	markdown, _ := ioutil.ReadAll(buf)
+	markdown = []byte(strings.Trim(string(markdown), " \r\n"))
+	fmt.Printf(">>>%s<<<\n", string(markdown))
 	html := string(blackfriday.MarkdownCommon(markdown))
+	fmt.Printf("<<<%s>>>\n", string(html))
 	return BlagPost{
 		meta,
 		html,
@@ -150,16 +153,37 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 	pageCount := int(math.Floor(float64(postCount)/float64(*config.PostsPerPage))) + 1
 
 	os.MkdirAll(path.Join(*config.Output, "page"), 0755)
-	if pageCount > 0 {
-		pagePosts := make(map[int][]BlagPost)
-		for i := postCount - 1; i >= 0; i-- {
-			pageNo := int(math.Floor(float64(postCount-i-1)/float64(*config.PostsPerPage))) + 1
-			pagePosts[pageNo] = append(pagePosts[pageNo], posts[i])
-		}
 
-		for k, v := range pagePosts {
-			pageFile, err := os.OpenFile(
-				path.Join(*config.Output, "page", fmt.Sprintf("%d.html", k)),
+	pagePosts := make(map[int][]BlagPost)
+
+	for i := postCount - 1; i >= 0; i-- {
+		pageNo := int(math.Floor(float64(postCount-i-1)/float64(*config.PostsPerPage))) + 1
+		pagePosts[pageNo] = append(pagePosts[pageNo], posts[i])
+	}
+
+	if postCount == 0 {
+		pagePosts[1] = make([]BlagPost, 0)
+	}
+
+	for k, v := range pagePosts {
+		pageFile, err := os.OpenFile(
+			path.Join(*config.Output, "page", fmt.Sprintf("%d.html", k)),
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		defer pageFile.Close()
+		if err != nil {
+			panic(err)
+		}
+		theme.Page.ExecuteWriter(pongo2.Context{
+			"base":         *config.BaseURL,
+			"title":        *config.Title,
+			"posts":        v,
+			"current_page": k,
+			"page_count":   pageCount,
+			"shortlen":     *config.StoryShortLength,
+		}, pageFile)
+		if k == 1 {
+			indexFile, err := os.OpenFile(
+				path.Join(*config.Output, "index.html"),
 				os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 			defer pageFile.Close()
 			if err != nil {
@@ -172,56 +196,8 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 				"current_page": k,
 				"page_count":   pageCount,
 				"shortlen":     *config.StoryShortLength,
-			}, pageFile)
-			if k == 1 {
-				indexFile, err := os.OpenFile(
-					path.Join(*config.Output, "index.html"),
-					os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-				defer pageFile.Close()
-				if err != nil {
-					panic(err)
-				}
-				theme.Page.ExecuteWriter(pongo2.Context{
-					"base":         *config.BaseURL,
-					"title":        *config.Title,
-					"posts":        v,
-					"current_page": k,
-					"page_count":   pageCount,
-					"shortlen":     *config.StoryShortLength,
-				}, indexFile)
-			}
+			}, indexFile)
 		}
-	} else {
-		pageFile, err := os.OpenFile(
-			path.Join(*config.Output, "page", "1.html"),
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-		defer pageFile.Close()
-		if err != nil {
-			panic(err)
-		}
-		theme.Page.ExecuteWriter(pongo2.Context{
-			"base":         *config.BaseURL,
-			"title":        config.Title,
-			"posts":        make([]BlagPost, 0),
-			"current_page": 1,
-			"page_count":   1,
-			"shortlen":     *config.StoryShortLength,
-		}, pageFile)
-		indexFile, err := os.OpenFile(
-			path.Join(*config.Output, "index.html"),
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-		defer pageFile.Close()
-		if err != nil {
-			panic(err)
-		}
-		theme.Page.ExecuteWriter(pongo2.Context{
-			"base":         *config.BaseURL,
-			"title":        config.Title,
-			"posts":        make([]BlagPost, 0),
-			"current_page": 1,
-			"page_count":   1,
-			"shortlen":     *config.StoryShortLength,
-		}, indexFile)
 	}
 }
 
@@ -236,6 +212,12 @@ func main() {
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
+
+	pongo2.RegisterFilter("trim", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
+		out = pongo2.AsValue(strings.Trim(in.String(), "\r\n"))
+		err = nil
+		return out, err
+	})
 
 	var theme Theme
 	theme = LoadTheme(*config.Theme)
