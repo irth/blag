@@ -97,9 +97,7 @@ func LoadPost(config Config, fpath string) BlagPost {
 
 	markdown, _ := ioutil.ReadAll(buf)
 	markdown = []byte(strings.Trim(string(markdown), " \r\n"))
-	fmt.Printf(">>>%s<<<\n", string(markdown))
 	html := string(blackfriday.MarkdownCommon(markdown))
-	fmt.Printf("<<<%s>>>\n", string(html))
 	return BlagPost{
 		meta,
 		html,
@@ -150,7 +148,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 	}
 
 	postCount := len(posts)
-	pageCount := int(math.Floor(float64(postCount)/float64(*config.PostsPerPage))) + 1
+	pageCount := int(math.Ceil(float64(postCount) / float64(*config.PostsPerPage)))
 
 	os.MkdirAll(path.Join(*config.Output, "page"), 0755)
 
