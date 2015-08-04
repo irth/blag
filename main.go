@@ -131,30 +131,18 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 
 	postCount := len(posts)
 	pageCount := int(math.Floor(float64(postCount) / float64(*config.PostsPerPage)))
-	pagePosts := make(map[int][]BlagPost)
-	for i := postCount - 1; i >= 0; i-- {
-		pageNo := int(math.Floor(float64(postCount-i-1)/float64(*config.PostsPerPage))) + 1
-		pagePosts[pageNo] = append(pagePosts[pageNo], posts[i])
-	}
 
 	os.MkdirAll(path.Join(*config.Output, "page"), 0755)
-	for k, v := range pagePosts {
-		pageFile, err := os.OpenFile(
-			path.Join(*config.Output, "page", fmt.Sprintf("%d.html", k)),
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-		defer pageFile.Close()
-		if err != nil {
-			panic(err)
+	if pageCount > 0 {
+		pagePosts := make(map[int][]BlagPost)
+		for i := postCount - 1; i >= 0; i-- {
+			pageNo := int(math.Floor(float64(postCount-i-1)/float64(*config.PostsPerPage))) + 1
+			pagePosts[pageNo] = append(pagePosts[pageNo], posts[i])
 		}
-		theme.Page.ExecuteWriter(pongo2.Context{
-			"title":        config.Title,
-			"posts":        v,
-			"current_page": k,
-			"page_count":   pageCount,
-		}, pageFile)
-		if k == 1 {
-			indexFile, err := os.OpenFile(
-				path.Join(*config.Output, "index.html"),
+
+		for k, v := range pagePosts {
+			pageFile, err := os.OpenFile(
+				path.Join(*config.Output, "page", fmt.Sprintf("%d.html", k)),
 				os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 			defer pageFile.Close()
 			if err != nil {
@@ -165,8 +153,50 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 				"posts":        v,
 				"current_page": k,
 				"page_count":   pageCount,
-			}, indexFile)
+			}, pageFile)
+			if k == 1 {
+				indexFile, err := os.OpenFile(
+					path.Join(*config.Output, "index.html"),
+					os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+				defer pageFile.Close()
+				if err != nil {
+					panic(err)
+				}
+				theme.Page.ExecuteWriter(pongo2.Context{
+					"title":        config.Title,
+					"posts":        v,
+					"current_page": k,
+					"page_count":   pageCount,
+				}, indexFile)
+			}
 		}
+	} else {
+		pageFile, err := os.OpenFile(
+			path.Join(*config.Output, "page", "1.html"),
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		defer pageFile.Close()
+		if err != nil {
+			panic(err)
+		}
+		theme.Page.ExecuteWriter(pongo2.Context{
+			"title":        config.Title,
+			"posts":        make([]BlagPost, 0),
+			"current_page": 1,
+			"page_count":   1,
+		}, pageFile)
+		indexFile, err := os.OpenFile(
+			path.Join(*config.Output, "index.html"),
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		defer pageFile.Close()
+		if err != nil {
+			panic(err)
+		}
+		theme.Page.ExecuteWriter(pongo2.Context{
+			"title":        config.Title,
+			"posts":        make([]BlagPost, 0),
+			"current_page": 1,
+			"page_count":   1,
+		}, indexFile)
 	}
 }
 
