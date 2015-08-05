@@ -116,7 +116,9 @@ func LoadPosts(config Config) []BlagPost {
 		panic(err)
 	}
 	for _, file := range filelist {
-		p = append(p, LoadPost(config, path.Join(inputDir, file.Name())))
+		if strings.HasSuffix(strings.ToLower(file.Name()), ".md") {
+			p = append(p, LoadPost(config, path.Join(inputDir, file.Name())))
+		}
 	}
 	return p
 }
