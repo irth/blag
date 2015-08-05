@@ -1,6 +1,9 @@
 ## Welcome to Blag.
 `Blag` (see [xkcd://148](https://xkcd.com/148/)) is yet another simple static page (blog in this case) generator.
 
+## Demo!
+[Click here to read some posts by the famous bestseller writer, Markov Chain.](https://irth.pl/blagdemo/)
+
 ## Why?
 Because a simple static page generator isn't that hard to write, yet not easy enough to be boring to make. I wanted something to code, and this seemed like a nice idea. So, for fun. Like [gopher Hacker News proxy](https://github.com/irth/gophernews) (yep, Internet Gopher, that one with menus.)
 Maybe I'll write a blog. Just kidding. I don't have anything wise to say.
