@@ -4,7 +4,8 @@
 ## Demo!
 [Click here to read some posts by the famous bestseller writer, Markov Chain.](https://irth.pl/blagdemo/)  
 Command line used to generate it:
-  blag -baseurl="https://irth.pl/blagdemo/" -input=blagdemo-in -output=blagdemo -title="Blag demo." -disqus="blagdemo" -theme="$GOPATH/src/github.com/irth/blag/theme" -short=500 -pps=2
+
+	blag -baseurl="https://irth.pl/blagdemo/" -input=blagdemo-in -output=blagdemo -title="Blag demo." -disqus="blagdemo" -theme="$GOPATH/src/github.com/irth/blag/theme" -short=500 -pps=2
 
 ## Why?
 Because a simple static page generator isn't that hard to write, yet not easy enough to be boring to make. I wanted something to code, and this seemed like a nice idea. So, for fun. Like [gopher Hacker News proxy](https://github.com/irth/gophernews) (yep, Internet Gopher, that one with menus.)
