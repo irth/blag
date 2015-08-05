@@ -5,7 +5,7 @@
 <div class="post">
   <div class="post-title"><a href="post/{{ post.Slug }}.html">{{ post.Title }}</a></div>
   <div class="post-meta">Added on <span>{{ post.Time }}</span> by <span>{{ post.Author }}</span>.</div>
-  <div class="post-short">{{ post.Content | striptags | truncatechars:shortlen | trim }}</div>
+  <div class="post-short">{{ post.Content | safe | striptags | truncatechars:shortlen | trim }}</div>
   <div>
     <a class="post-more" href="post/{{ post.Slug }}.html">[more]</a>
   </div>
