@@ -46,8 +46,7 @@ body {
 }
 
 .post-short {
-  font-size: 16px !important;
-  white-space: pre;
+  font-size: 16px;
 }
 
 .post-short p,
