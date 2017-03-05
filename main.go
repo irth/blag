@@ -20,15 +20,16 @@ import (
 
 // Config is a struct that will be used to store Blag's config.
 type Config struct {
-	Input            *string
-	Theme            *string
-	Output           *string
-	PostsPerPage     *int
-	StoryShortLength *int
-	Title            *string
-	DateFormat       *string
-	BaseURL          *string
-	DisqusShortname  *string
+	Input             *string
+	Theme             *string
+	Output            *string
+	PostsPerPage      *int
+	StoryShortLength  *int
+	Title             *string
+	DateFormat        *string
+	BaseURL           *string
+	DisqusShortname   *string
+	GoogleAnalyticsID *string
 }
 
 // BlagPostMeta is a struct that will hold a blogpost metadata
@@ -149,10 +150,11 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 			panic(err)
 		}
 		theme.Post.ExecuteWriter(pongo2.Context{
-			"disqus_shortname": *config.DisqusShortname,
-			"base":             *config.BaseURL,
-			"title":            *config.Title,
-			"post":             post,
+			"disqus_shortname":    *config.DisqusShortname,
+			"google_analytics_id": *config.GoogleAnalyticsID,
+			"base":                *config.BaseURL,
+			"title":               *config.Title,
+			"post":                post,
 		}, postFile)
 	}
 
@@ -181,13 +183,14 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 			panic(err)
 		}
 		theme.Page.ExecuteWriter(pongo2.Context{
-			"disqus_shortname": *config.DisqusShortname,
-			"base":             *config.BaseURL,
-			"title":            *config.Title,
-			"posts":            v,
-			"current_page":     k,
-			"page_count":       pageCount,
-			"shortlen":         *config.StoryShortLength,
+			"disqus_shortname":    *config.DisqusShortname,
+			"google_analytics_id": *config.GoogleAnalyticsID,
+			"base":                *config.BaseURL,
+			"title":               *config.Title,
+			"posts":               v,
+			"current_page":        k,
+			"page_count":          pageCount,
+			"shortlen":            *config.StoryShortLength,
 		}, pageFile)
 		if k == 1 {
 			indexFile, err := os.OpenFile(
@@ -198,13 +201,14 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 				panic(err)
 			}
 			theme.Page.ExecuteWriter(pongo2.Context{
-				"disqus_shortname": *config.DisqusShortname,
-				"base":             *config.BaseURL,
-				"title":            *config.Title,
-				"posts":            v,
-				"current_page":     k,
-				"page_count":       pageCount,
-				"shortlen":         *config.StoryShortLength,
+				"disqus_shortname":    *config.DisqusShortname,
+				"google_analytics_id": *config.GoogleAnalyticsID,
+				"base":                *config.BaseURL,
+				"title":               *config.Title,
+				"posts":               v,
+				"current_page":        k,
+				"page_count":          pageCount,
+				"shortlen":            *config.StoryShortLength,
 			}, indexFile)
 		}
 	}
@@ -219,6 +223,7 @@ func main() {
 	config.DateFormat = flag.String("dateformat", "2006-01-02 15:04:05", "Time layout, as used in Golang's time.Time.Format()")
 	config.BaseURL = flag.String("baseurl", "/", "URL that will be used in <base href=\"\"> element.")
 	config.DisqusShortname = flag.String("disqus", "", "Your Disqus shortname. If empty, comments will be disabled.")
+	config.GoogleAnalyticsID = flag.String("google", "", "Your Google Analytics Tracker ID. If empty, analytics will be disabled.")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
