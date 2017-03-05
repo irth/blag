@@ -25,7 +25,8 @@ Argument name | Default               | Description
 --------------|-----------------------|------------
 baseurl       | "/"                   | Base URL of your website. It will be used in `<base href="{{ baseurl }}">`.
 dateformat    | "2006-01-02 15:04:05" | Format of date. See [Golang docs](http://golang.org/pkg/time/#Time.Format).
-disqus        | ""                    | If you want to use Disqus comments, set this to your shortname. If you don't leave it with default value, which is an empty string.
+disqus        | ""                    | If you want to use Disqus comments, set this to your shortname. If you don't, leave it with the default value, which is an empty string.
+google        | ""                    | If you want to use Google Analytics, set this to your tracker ID. If you don't, leave it with the default value, which is an empty string.
 input         | "input"               | This is path to the directory where your `blagposts` are. They will be read in alphabetical order and appear on page in reverse alphabetical order. So, your post names should probably look similar to `01-firstpost.md` or `2015-05-12_20:22_whatever.md`. (`.md` extension is obligatory)
 output        | "output"              | This is the directory where `blag` will store generated static HTML. **It will be deleted recursively (using `os.RemoveAll`). So, be careful.**
 pps           | 10                    | Number of posts per page. Positive integer, please.
@@ -67,23 +68,25 @@ Templates use pongo2 syntax, which should be compatible with Django's template s
 
 Variables available in that template:
 
-	"disqus_shortname": *config.DisqusShortname,  // --disqus cmdline argument value
-	"base":             *config.BaseURL,          // --baseurl
-	"title":            *config.Title,            // --title
-	"posts":            v,                        // slice (list) of posts.
-	                                              // You can iterate over it.
-	"current_page":     k,                        // Current page number.
-	                                              // Do something cool with it, like "next/previous page" links.
-	"page_count":       pageCount,                // Count of all pages.
-	"shortlen":         *config.StoryShortLength, // --short
+	"disqus_shortname":    *config.DisqusShortname,   // --disqus cmdline argument value
+	"google_analytics_id": *config.GoogleAnalyticsID, // --google cmdline argument value
+	"base":                *config.BaseURL,           // --baseurl
+	"title":               *config.Title,             // --title
+	"posts":               v,                         // slice (list) of posts.
+	                                                  // You can iterate over it.
+	"current_page":        k,                         // Current page number.
+	                                                  // Do something cool with it, like "next/previous page" links.
+	"page_count":          pageCount,                 // Count of all pages.
+	"shortlen":            *config.StoryShortLength,  // --short
 
 `templates/post.html` is template used to generate single post page.
 Variables:
 
-	"disqus_shortname": *config.DisqusShortname, // --disqus cmdline argument value
-	"base":             *config.BaseURL,         // --baseurl
-	"title":            *config.Title,           // --title
-	"post":             post,                    // post struct
+	"disqus_shortname":    *config.DisqusShortname,   // --disqus cmdline argument value
+	"google_analytics_id": *config.GoogleAnalyticsID, // --google cmdline argument value
+	"base":                *config.BaseURL,           // --baseurl
+	"title":               *config.Title,             // --title
+	"post":                post,                      // post struct
 
 
 Posts in `post` and `posts` look like that:
