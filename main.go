@@ -30,6 +30,7 @@ type Config struct {
 	BaseURL           *string
 	DisqusShortname   *string
 	GoogleAnalyticsID *string
+	CookieWarning     *bool
 }
 
 // BlagPostMeta is a struct that will hold a blogpost metadata
@@ -152,6 +153,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 		theme.Post.ExecuteWriter(pongo2.Context{
 			"disqus_shortname":    *config.DisqusShortname,
 			"google_analytics_id": *config.GoogleAnalyticsID,
+			"cookie_warning":      *config.CookieWarning,
 			"base":                *config.BaseURL,
 			"title":               *config.Title,
 			"post":                post,
@@ -185,6 +187,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 		theme.Page.ExecuteWriter(pongo2.Context{
 			"disqus_shortname":    *config.DisqusShortname,
 			"google_analytics_id": *config.GoogleAnalyticsID,
+			"cookie_warning":      *config.CookieWarning,
 			"base":                *config.BaseURL,
 			"title":               *config.Title,
 			"posts":               v,
@@ -203,6 +206,7 @@ func GenerateHTML(config Config, theme Theme, posts []BlagPost) {
 			theme.Page.ExecuteWriter(pongo2.Context{
 				"disqus_shortname":    *config.DisqusShortname,
 				"google_analytics_id": *config.GoogleAnalyticsID,
+				"cookie_warning":      *config.CookieWarning,
 				"base":                *config.BaseURL,
 				"title":               *config.Title,
 				"posts":               v,
@@ -224,6 +228,7 @@ func main() {
 	config.BaseURL = flag.String("baseurl", "/", "URL that will be used in <base href=\"\"> element.")
 	config.DisqusShortname = flag.String("disqus", "", "Your Disqus shortname. If empty, comments will be disabled.")
 	config.GoogleAnalyticsID = flag.String("google", "", "Your Google Analytics Tracker ID. If empty, analytics will be disabled.")
+	config.CookieWarning = flag.Bool("cookies", true, "If enabled and supported by the theme, an EU cookie law warning will be shown.")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
