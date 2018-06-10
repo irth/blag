@@ -228,7 +228,7 @@ func main() {
 	config.BaseURL = flag.String("baseurl", "/", "URL that will be used in <base href=\"\"> element.")
 	config.DisqusShortname = flag.String("disqus", "", "Your Disqus shortname. If empty, comments will be disabled.")
 	config.GoogleAnalyticsID = flag.String("google", "", "Your Google Analytics Tracker ID. If empty, analytics will be disabled.")
-	config.CookieWarning = flag.Bool("cookies", true, "If enabled and supported by the theme, an EU cookie law warning will be shown.")
+	config.CookieWarning = flag.Bool("cookies", false, "If enabled and supported by the theme, an EU cookie law warning will be shown.")
 	config.PostsPerPage = flag.Int("pps", 10, "Post count per page")
 	config.StoryShortLength = flag.Int("short", 250, "Length of shortened versions of stories (-1 disables shortening)")
 	flag.Parse()
